@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameZone - Play Free Unblocked Games</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* NAV */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(15,15,15,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid #1e1e1e;
+            padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 60px;
+        }
+        .logo {
+            font-size: 1.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .search-box {
+            position: relative;
+        }
+        .search-box input {
+            background: #1a1a1a; border: 1px solid #2a2a2a;
+            border-radius: 10px; padding: 8px 14px 8px 36px;
+            color: #e0e0e0; font-size: 0.9rem; width: 260px;
+            outline: none; transition: border-color 0.2s;
+        }
+        .search-box input:focus { border-color: #6c5ce7; }
+        .search-box svg {
+            position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+            width: 16px; height: 16px; color: #666;
+        }
+        .btn {
+            padding: 8px 18px; border-radius: 10px; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: #6c5ce7; color: #fff; }
+        .btn-primary:hover { background: #5a4bd1; }
+        .btn-ghost { background: transparent; color: #aaa; border: 1px solid #2a2a2a; }
+        .btn-ghost:hover { border-color: #6c5ce7; color: #fff; }
+        .btn-success { background: #00b894; color: #fff; }
+        .btn-success:hover { background: #00a381; }
+        .btn-danger { background: #e74c3c; color: #fff; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+        /* CATEGORIES */
+        .categories {
+            display: flex; gap: 8px; padding: 16px 24px;
+            overflow-x: auto; scrollbar-width: none;
+        }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-btn {
+            padding: 6px 16px; border-radius: 20px; border: 1px solid #2a2a2a;
+            background: transparent; color: #aaa; font-size: 0.82rem;
+            cursor: pointer; white-space: nowrap; transition: all 0.2s;
+        }
+        .cat-btn:hover, .cat-btn.active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
+
+        /* GRID */
+        .games-container {
+            padding: 8px 24px 40px;
+        }
+        .section-title {
+            font-size: 1.1rem; font-weight: 700; margin: 16px 0 12px;
+            color: #ccc;
+        }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+        }
+        .game-card {
+            background: #1a1a1a; border: 1px solid #222;
+            border-radius: 12px; overflow: hidden;
+            cursor: pointer; transition: all 0.25s;
+            position: relative;
+        }
+        .game-card:hover {
+            border-color: #6c5ce7;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(108,92,231,0.15);
+        }
+        .game-card img {
+            width: 100%; aspect-ratio: 16/10; object-fit: cover;
+            display: block; background: #111;
+        }
+        .game-card-info {
+            padding: 10px 12px;
+        }
+        .game-card-info h3 {
+            font-size: 0.85rem; font-weight: 600; color: #e0e0e0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .game-card-info .cat-tag {
+            font-size: 0.7rem; color: #888; margin-top: 2px;
+        }
+        .rating {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            padding: 2px 8px; border-radius: 6px;
+            font-size: 0.72rem; font-weight: 700; color: #f9ca24;
+        }
+
+        /* GAME PLAYER MODAL */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.92);
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-header {
+            width: 100%; display: flex; align-items: center;
+            justify-content: space-between; padding: 12px 20px;
+            background: #111; border-bottom: 1px solid #222;
+        }
+        .modal-header h2 { font-size: 1rem; color: #e0e0e0; }
+        .modal-header .btn-close {
+            background: none; border: none; color: #888;
+            font-size: 1.5rem; cursor: pointer; padding: 4px 8px;
+        }
+        .modal-header .btn-close:hover { color: #fff; }
+        .game-frame-wrap {
+            flex: 1; width: 100%; display: flex; align-items: center; justify-content: center;
+            padding: 8px;
+        }
+        .game-frame-wrap iframe {
+            width: 100%; height: 100%; border: none; border-radius: 8px;
+            max-height: calc(100vh - 60px);
+        }
+        .fullscreen-btn {
+            position: absolute; bottom: 20px; right: 20px;
+            background: rgba(108,92,231,0.9); border: none; color: #fff;
+            padding: 10px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 0.8rem; font-weight: 600;
+        }
+
+        /* LOGIN MODAL */
+        .login-overlay {
+            display: none; position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            align-items: center; justify-content: center;
+        }
+        .login-overlay.active { display: flex; }
+        .login-box {
+            background: #1a1a1a; border: 1px solid #2a2a2a;
+            border-radius: 16px; padding: 32px; width: 360px; max-width: 90vw;
+        }
+        .login-box h2 { font-size: 1.3rem; margin-bottom: 4px; }
+        .login-box p { color: #666; font-size: 0.85rem; margin-bottom: 20px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+        .input-group input {
+            width: 100%; padding: 10px 14px; background: #111;
+            border: 1px solid #2a2a2a; border-radius: 10px;
+            color: #e0e0e0; font-size: 0.9rem; outline: none;
+        }
+        .input-group input:focus { border-color: #6c5ce7; }
+        .login-box .btn { width: 100%; justify-content: center; padding: 10px; }
+        .error-msg { color: #e74c3c; font-size: 0.8rem; margin-top: 8px; display: none; }
+
+        /* ADD GAME MODAL */
+        .addgame-overlay {
+            display: none; position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            align-items: center; justify-content: center;
+        }
+        .addgame-overlay.active { display: flex; }
+        .addgame-box {
+            background: #1a1a1a; border: 1px solid #2a2a2a;
+            border-radius: 16px; padding: 32px; width: 420px; max-width: 90vw;
+        }
+        .addgame-box h2 { font-size: 1.3rem; margin-bottom: 4px; }
+        .addgame-box p { color: #666; font-size: 0.85rem; margin-bottom: 20px; }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: #00b894; color: #fff; padding: 10px 24px;
+            border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+            z-index: 400; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .toast.show { opacity: 1; }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: #555;
+        }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.95rem; }
+
+        /* FAV BUTTON ON CARD */
+        .fav-btn {
+            position: absolute; top: 8px; left: 8px; z-index: 5;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            border: none; color: #888; font-size: 1.1rem;
+            width: 30px; height: 30px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .fav-btn:hover { color: #e74c3c; transform: scale(1.15); }
+        .fav-btn.liked { color: #e74c3c; }
+
+        /* PLAYER ACTIONS BAR */
+        .player-actions { display: flex; gap: 6px; align-items: center; }
+
+        /* SIDE PANEL */
+        .side-panel {
+            position: fixed; top: 60px; right: 0; width: 340px;
+            height: calc(100vh - 60px); background: #1a1a1a;
+            border-left: 1px solid #222; z-index: 250;
+            transform: translateX(100%); transition: transform 0.3s ease;
+            overflow-y: auto; padding: 20px;
+        }
+        .side-panel.open { transform: translateX(0); }
+        .side-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 14px; padding-right: 24px; }
+        .side-panel .close-panel {
+            position: absolute; top: 14px; right: 14px; background: none;
+            border: none; color: #888; font-size: 1.2rem; cursor: pointer;
+        }
+        .side-panel .close-panel:hover { color: #fff; }
+        .sp-section { margin-bottom: 20px; }
+        .sp-section h4 {
+            font-size: 0.78rem; color: #888; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 600;
+        }
+
+        /* REPORT BUTTONS */
+        .report-bar { display: flex; gap: 6px; }
+        .report-btn {
+            padding: 6px 14px; border-radius: 8px; border: 1px solid #2a2a2a;
+            background: transparent; font-size: 0.8rem; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+            color: #aaa; font-weight: 500;
+        }
+        .report-btn:hover { border-color: #444; }
+        .report-btn.working { color: #00b894; }
+        .report-btn.working.on { background: rgba(0,184,148,0.12); border-color: #00b894; color: #00b894; }
+        .report-btn.broken { color: #e74c3c; }
+        .report-btn.broken.on { background: rgba(231,76,60,0.12); border-color: #e74c3c; color: #e74c3c; }
+        .report-count { font-size: 0.72rem; color: #555; margin-top: 5px; }
+
+        /* COMMENTS */
+        .comment-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; margin-bottom: 10px; }
+        .comment { background: #111; border: 1px solid #222; border-radius: 10px; padding: 8px 10px; }
+        .comment .c-author { font-size: 0.72rem; color: #a29bfe; font-weight: 600; }
+        .comment .c-text { font-size: 0.78rem; color: #aaa; margin-top: 2px; }
+        .comment .c-time { font-size: 0.65rem; color: #444; margin-top: 3px; }
+        .comment-form { display: flex; gap: 6px; }
+        .comment-form input {
+            flex: 1; padding: 7px 10px; background: #111; border: 1px solid #2a2a2a;
+            border-radius: 8px; color: #e0e0e0; font-size: 0.8rem; outline: none;
+        }
+        .comment-form input:focus { border-color: #6c5ce7; }
+        .comment-form button {
+            padding: 7px 12px; border-radius: 8px; border: none;
+            background: #6c5ce7; color: #fff; font-size: 0.8rem;
+            font-weight: 600; cursor: pointer;
+        }
+
+        /* FULLSCREEN */
+        .game-frame-wrap:fullscreen { background: #000; padding: 0; }
+        .game-frame-wrap:fullscreen iframe { border-radius: 0; max-height: 100vh; }
+
+        /* RESPONSIVE */
+        @media (max-width: 640px) {
+            nav { padding: 0 12px; }
+            .search-box input { width: 160px; }
+            .categories { padding: 12px; }
+            .games-container { padding: 8px 12px 40px; }
+            .games-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .side-panel { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo" onclick="goHome()">🎮 GameZone</div>
+    <div class="nav-right">
+        <div class="search-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="searchInput" placeholder="Search games..." oninput="filterGames()">
+        </div>
+        <button class="btn btn-ghost btn-sm" id="loginBtn" onclick="openLogin()">Admin Login</button>
+        <button class="btn btn-success btn-sm" id="addGameBtn" style="display:none;" onclick="openAddGame()">+ Add Game</button>
+        <button class="btn btn-danger btn-sm" id="logoutBtn" style="display:none;" onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<div class="categories" id="categoriesBar"></div>
+
+<div class="games-container">
+    <div class="section-title" id="sectionTitle">All Games</div>
+    <div class="games-grid" id="gamesGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <p>No games found</p>
+    </div>
+</div>
+
+<!-- Game Player Modal -->
+<div class="modal-overlay" id="gameModal">
+    <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <button class="fav-btn" id="playerFavBtn" onclick="toggleFav()" style="position:static;background:#222;">&#9825;</button>
+            <h2 id="gameModalTitle">Game</h2>
+        </div>
+        <div class="player-actions">
+            <button class="btn btn-ghost btn-sm" onclick="togglePanel()" style="font-size:0.78rem;">Info</button>
+            <button class="btn btn-primary btn-sm" onclick="goFullscreen()" style="font-size:0.78rem;">&#x26F6; Fullscreen</button>
+            <button class="btn-close" onclick="closeGame()">&times;</button>
+        </div>
+    </div>
+    <div class="game-frame-wrap" id="gameFrameWrap">
+        <iframe id="gameIframe" allowfullscreen></iframe>
+    </div>
+</div>
+
+<!-- Side Panel -->
+<div class="side-panel" id="sidePanel">
+    <button class="close-panel" onclick="togglePanel()">&times;</button>
+    <div class="sp-section">
+        <h4>Works?</h4>
+        <div class="report-bar">
+            <button class="report-btn working" id="reportWorking" onclick="report('working')">&#10003; Working</button>
+            <button class="report-btn broken" id="reportBroken" onclick="report('broken')">&#10007; Broken</button>
+        </div>
+        <div class="report-count" id="reportCount"></div>
+    </div>
+    <div class="sp-section">
+        <h4>Comments</h4>
+        <div class="comment-list" id="commentList"></div>
+        <div class="comment-form">
+            <input type="text" id="commentInput" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')postComment()">
+            <button onclick="postComment()">Post</button>
+        </div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div class="login-overlay" id="loginModal">
+    <div class="login-box">
+        <h2>Admin Login</h2>
+        <p>Enter the admin password to access advanced features.</p>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="loginPass" placeholder="Enter password..." onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn btn-primary" onclick="doLogin()">Login</button>
+        <div class="error-msg" id="loginError">Incorrect password</div>
+    </div>
+</div>
+
+<!-- Add Game Modal -->
+<div class="addgame-overlay" id="addGameModal">
+    <div class="addgame-box">
+        <h2>Add a Game</h2>
+        <p>Enter the game details below. The iframe URL should point to an HTML game file.</p>
+        <div class="input-group">
+            <label>Game Name</label>
+            <input type="text" id="addName" placeholder="e.g. Cool Game">
+        </div>
+        <div class="input-group">
+            <label>Game URL (iframe src)</label>
+            <input type="text" id="addUrl" placeholder="https://example.com/game.html">
+        </div>
+        <div class="input-group">
+            <label>Image URL (thumbnail)</label>
+            <input type="text" id="addImage" placeholder="https://example.com/thumb.webp">
+        </div>
+        <div class="input-group">
+            <label>Category</label>
+            <input type="text" id="addCategory" placeholder="e.g. Action">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+            <button class="btn btn-success" onclick="saveGame()">Add Game</button>
+            <button class="btn btn-ghost" onclick="closeAddGame()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAMES = [
+    { name: "Slope", slug: "slope", folder: "slope", img: "slope.webp", cat: "Running", rating: 4.8 },
+    { name: "Stickman Hook", slug: "stickman-hook", folder: "stickman-hook", img: "stickman-hook.webp", cat: "Puzzle", rating: 4.8 },
+    { name: "Speed Stars", slug: "speed-stars", folder: "speed-stars", img: "speed-stars.webp", cat: "Running", rating: 4.2 },
+    { name: "Slope 3", slug: "slope3", folder: "slope3", img: "slope-3.webp", cat: "Running", rating: 4.2 },
+    { name: "Retro Bowl", slug: "retro-bowl", folder: "Retro-Bowl", img: "Retro-Bowl.webp", cat: "Football", rating: 4.9 },
+    { name: "Polytrack", slug: "polytrack", folder: "polytrack", img: "polytrack.webp", cat: "Car", rating: 4.9 },
+    { name: "Happy Wheels", slug: "happy-wheels", folder: "happy-wheels", img: "happywheels.webp", cat: "Bike", rating: 4.7 },
+    { name: "Getaway Shootout", slug: "getaway-shootout", folder: "getaway-shootout", img: "getaway.webp", cat: "Shooting", rating: 4.5 },
+    { name: "Granny", slug: "granny", folder: "granny", img: "granny.webp", cat: "Escape", rating: 5.0 },
+    { name: "1 On 1 Soccer", slug: "1-on-1-soccer", folder: "1-on-1-soccer", img: "1-on-1-soccer.webp", cat: "Football", rating: 5.0 },
+    { name: "Angry Heroes", slug: "angry-heroes", folder: "angry-heroes", img: "Angry-Heroes.webp", cat: "Puzzle", rating: 4.8 },
+    { name: "Geometry Dash Subzero", slug: "geometry-dash-subzero", folder: "geometry-dash-subzero", img: "geometry-dash-subzero.webp", cat: "Running", rating: 4.8 },
+    { name: "Crossy Road", slug: "crossy-road", folder: "crossy-road", img: "Crossy-Road.webp", cat: "Running", rating: 4.8 },
+    { name: "Football Legends", slug: "football-legends", folder: "football-legends", img: "football-legends.webp", cat: "Football", rating: 4.8 },
+    { name: "Slope 2", slug: "slope-2", folder: "slope2", img: "slope-2.webp", cat: "Running", rating: 4.6 },
+    { name: "Survival Race", slug: "survival-race", folder: "survival-race", img: "survival-race.webp", cat: "Car", rating: 4.8 },
+    { name: "Papa's Freezeria", slug: "papas-freezeria", folder: "papa's-freezeria", img: "papa's-freezeria.webp", cat: "Papa's", rating: 4.8 },
+    { name: "Subway Surfers", slug: "subway-surfers", folder: "subway-surfers", img: "subway-surfers.webp", cat: "Running", rating: 4.8 },
+    { name: "Among Us", slug: "among-us", folder: "among-us", img: "among-us.webp", cat: "Simulation", rating: 4.8 },
+    { name: "10 Minutes Till Dawn", slug: "10-minutes-till-dawn", folder: "10-minutes-till-dawn", img: "10-minutes-till-dawn.webp", cat: "Shooting", rating: 4.8 },
+    { name: "Block Blast", slug: "block-blast", folder: "Block-Blast", img: "block-blast.webp", cat: "Puzzle", rating: 4.4 },
+    { name: "Bad Ice Cream 3", slug: "bad-ice-cream3", folder: "bad-ice-cream3", img: "bad-ice-cream-3.webp", cat: "Puzzle", rating: 4.3 },
+    { name: "Wordle Unlimited", slug: "wordle-unlimited", folder: "wordle-unlimited", img: "wordle-unlimited.webp", cat: "Puzzle", rating: 4.2 },
+    { name: "Bad Ice Cream 2", slug: "bad-ice-cream2", folder: "bad-ice-cream2", img: "bad-ice-cream-2.webp", cat: "Puzzle", rating: 4.1 },
+    { name: "Bad Ice Cream", slug: "bad-ice-cream", folder: "bad-ice-cream", img: "bad-ice-cream.webp", cat: "Puzzle", rating: 4.1 },
+    { name: "Ovo", slug: "ovo", folder: "ovo", img: "ovo.webp", cat: "Running", rating: 4.7 },
+    { name: "Geometry Dash", slug: "geometry-dash", folder: "Geometry-Dash", img: "Geometry-Dash.webp", cat: "Running", rating: 4.6 },
+    { name: "Level Devil", slug: "level-devil", folder: "LevelDevil-main", img: "Level Devil.webp", cat: "Running", rating: 4.5 },
+    { name: "Cluster Rush", slug: "cluster-rush", folder: "cluster-rush", img: "clusterrush.webp", cat: "Running", rating: 4.6 },
+    { name: "Drift Hunters", slug: "drift-hunters", folder: "drift-hunters", img: "drift-hunters.webp", cat: "Car", rating: 4.7 },
+    { name: "Drift Boss", slug: "drift-boss", folder: "drift-boss", img: "drift-boss.webp", cat: "Car", rating: 4.7 },
+    { name: "Rocket League", slug: "rocket-league", folder: "rocket-league", img: "rocket-league.webp", cat: "Car", rating: 4.4 },
+    { name: "Traffic Jam 3D", slug: "traffic-jam-3d", folder: "traffic-jam-3d", img: "traffic-jam-3d.webp", cat: "Car", rating: 4.4 },
+    { name: "Drive Mad", slug: "drive-mad", folder: "drive-mad", img: "drive-mad.webp", cat: "Car", rating: 4.4 },
+    { name: "Bitlife", slug: "bitlife", folder: "bitlife", img: "bitlife.webp", cat: "Simulation", rating: 4.6 },
+    { name: "Tiny Fishing", slug: "tiny-fishing", folder: "tiny-fishing", img: "tiny-fishing.webp", cat: "Simulation", rating: 4.5 },
+    { name: "Crazy Cattle 3D", slug: "crazy-cattle-3d", folder: "crazy-cattle-3d", img: "crazy-cattle-3d-game.webp", cat: "Simulation", rating: 4.3 },
+    { name: "Monkey Mart", slug: "monkey-mart", folder: "monkey-mart", img: "monkey-mart.webp", cat: "Simulation", rating: 4.2 },
+    { name: "Minecraft", slug: "minecraft", folder: "minecraft", img: "minecraft.webp", cat: "Simulation", rating: 4.1 },
+    { name: "Granny 2", slug: "granny-2", folder: "granny-2", img: "granny-2.webp", cat: "Escape", rating: 4.1 },
+    { name: "FNAF 4", slug: "five-nights-at-freddys-4", folder: "FNAF4", img: "fnaf4.webp", cat: "Escape", rating: 4.6 },
+    { name: "FNAF 3", slug: "five-nights-at-freddys-3", folder: "FNAF3", img: "fnaf3.webp", cat: "Escape", rating: 4.5 },
+    { name: "FNAF", slug: "five-nights-at-freddys", folder: "FNAF1", img: "fnaf.webp", cat: "Escape", rating: 4.2 },
+    { name: "FNAF 2", slug: "five-nights-at-freddys-2", folder: "FNAF2", img: "fnaf2.webp", cat: "Escape", rating: 4.1 },
+    { name: "Friday Night Funkin'", slug: "friday-night-funkin", folder: "Friday-Night-Funkin", img: "Friday-Night-Funkin.webp", cat: "Clicker", rating: 4.7 },
+    { name: "Cookie Clicker", slug: "cookie-clicker", folder: "cookie-clicker", img: "Cookie_Clicker.webp", cat: "Clicker", rating: 4.6 },
+    { name: "A Small World Cup", slug: "a-small-world-cup", folder: "a-small-world-cup", img: "a-small-world-cup.webp", cat: "Football", rating: 4.3 },
+    { name: "Basket Random", slug: "basket-random", folder: "Basket-Random", img: "basket-random.webp", cat: "Basketball", rating: 4.4 },
+    { name: "Basket Bros", slug: "basket-bros", folder: "basket-bros", img: "basket-bros.webp", cat: "Basketball", rating: 4.2 },
+    { name: "Basketball Stars", slug: "basketball-stars", folder: "Basketball-Stars", img: "Basketball-Stars.webp", cat: "Basketball", rating: 4.0 },
+    { name: "Doodle Baseball", slug: "doodle-baseball", folder: "doodle-baseball", img: "doodle-baseball.webp", cat: "Baseball", rating: 4.1 },
+    { name: "Papa's Burgeria", slug: "papas-burgeria", folder: "papa's-burgeria", img: "papa's-burgeria.webp", cat: "Papa's", rating: 4.4 },
+    { name: "Papa's Wingeria", slug: "papas-wingeria", folder: "papa's-wingeria", img: "papa's-wingeria.webp", cat: "Papa's", rating: 4.2 },
+    { name: "Papa's Pizzeria", slug: "papas-pizzeria", folder: "papa's-pizzeria", img: "papa's-pizzeria.webp", cat: "Papa's", rating: 4.2 },
+    { name: "Papa's Bakeria", slug: "papas-bakeria", folder: "papa's-bakeria", img: "papa's-bakeria.webp", cat: "Papa's", rating: 4.1 },
+    { name: "Tag", slug: "tag", folder: "tag", img: "tag.webp", cat: "2 Player", rating: 4.7 },
+    { name: "Fireboy And Watergirl", slug: "fireboy-and-watergirl", folder: "fireboy-and-watergirl", img: "fireboy-and-watergirl.webp", cat: "2 Player", rating: 4.1 },
+    { name: "Blockpost", slug: "blockpost", folder: "blockpost-poki", img: "blockpost.webp", cat: "Shooting", rating: 4.6 },
+    { name: "Bad Time Simulator", slug: "bad-time-simulator", folder: "bad-time-simulator", img: "bad-time-simulator.webp", cat: "Shooting", rating: 4.6 },
+    { name: "Creative Kill Chamber", slug: "creative-kill-chamber", folder: "Creative-Kill-Chamber", img: "creative-kill-chamber-game.webp", cat: "Shooting", rating: 4.2 },
+    { name: "Moto X3M", slug: "moto-x3m", folder: "moto-x3m", img: "moto-x3m.webp", cat: "Bike", rating: 4.0 },
+    { name: "Run 3", slug: "run3", folder: "run3", img: "run-3.webp", cat: "Running", rating: 4.5 },
+    { name: "Flappy Bird", slug: "flappy-bird", folder: "flappy-bird", img: "Flappy-Bird.webp", cat: "Running", rating: 4.5 },
+];
+
+const CDN = "https://cdn.myunblockedgames.com/games";
+let isAdmin = false;
+let currentCat = "All";
+let customGames = JSON.parse(localStorage.getItem("customGames") || "[]");
+let currentGameSlug = "";
+let panelOpen = false;
+
+function getImgUrl(g) {
+    if (g.custom) return g.imageUrl;
+    return `${CDN}/${g.folder}/${g.img}`;
+}
+function getIframeUrl(g) {
+    if (g.custom) return g.iframeUrl;
+    return `${CDN}/${g.folder}/index.html`;
+}
+
+function getAllGames() {
+    return [...GAMES, ...customGames.map(c => ({...c, custom: true}))];
+}
+
+function getCategories() {
+    const cats = new Set(getAllGames().map(g => g.cat));
+    return ["All", ...Array.from(cats).sort()];
+}
+
+function renderCategories() {
+    const bar = document.getElementById("categoriesBar");
+    bar.innerHTML = getCategories().map(c =>
+        `<button class="cat-btn ${c === currentCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}</button>`
+    ).join("");
+}
+
+function selectCat(c) {
+    currentCat = c;
+    renderCategories();
+    filterGames();
+}
+
+function filterGames() {
+    const q = document.getElementById("searchInput").value.toLowerCase();
+    let games = getAllGames();
+    if (currentCat !== "All") games = games.filter(g => g.cat === currentCat);
+    if (q) games = games.filter(g => g.name.toLowerCase().includes(q));
+    renderGames(games);
+}
+
+function renderGames(games) {
+    const grid = document.getElementById("gamesGrid");
+    const empty = document.getElementById("emptyState");
+    const title = document.getElementById("sectionTitle");
+    title.textContent = currentCat === "All" ? "All Games" : currentCat;
+    if (games.length === 0) {
+        grid.innerHTML = "";
+        empty.style.display = "block";
+        return;
+    }
+    empty.style.display = "none";
+    grid.innerHTML = games.map(g => {
+        const slug = g.slug || g.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const isFav = isFavorite(slug);
+        return `
+        <div class="game-card">
+            <button class="fav-btn ${isFav ? 'liked' : ''}" onclick="event.stopPropagation();toggleFavCard('${slug}',this)">${isFav ? '&#9829;' : '&#9825;'}</button>
+            <img src="${getImgUrl(g)}" alt="${g.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 160 100%22><rect fill=%22%23111%22 width=%22160%22 height=%22100%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%23444%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2214%22>No Image</text></svg>'" onclick="playGame('${g.name.replace(/'/g, "\\'")}', '${slug}')">
+            <div class="rating">★ ${g.rating}</div>
+            <div class="game-card-info" onclick="playGame('${g.name.replace(/'/g, "\\'")}', '${slug}')">
+                <h3>${g.name}</h3>
+                <div class="cat-tag">${g.cat}</div>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+function playGame(name, slug) {
+    const all = getAllGames();
+    const g = all.find(x => (x.slug || x.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')) === slug);
+    if (!g) return;
+    currentGameSlug = slug;
+    document.getElementById("gameModalTitle").textContent = name;
+    document.getElementById("gameIframe").src = getIframeUrl(g);
+    document.getElementById("gameModal").classList.add("active");
+    document.body.style.overflow = "hidden";
+    updateFavBtn();
+    updateReportUI();
+    loadComments();
+    if (panelOpen) togglePanel();
+}
+
+function closeGame() {
+    document.getElementById("gameModal").classList.remove("active");
+    document.getElementById("gameIframe").src = "";
+    document.body.style.overflow = "";
+    currentGameSlug = "";
+    if (panelOpen) togglePanel();
+}
+
+function goHome() {
+    closeGame();
+    document.getElementById("searchInput").value = "";
+    currentCat = "All";
+    renderCategories();
+    filterGames();
+    window.scrollTo(0, 0);
+}
+
+// LOGIN
+function openLogin() {
+    document.getElementById("loginModal").classList.add("active");
+    document.getElementById("loginPass").value = "";
+    document.getElementById("loginError").style.display = "none";
+    document.getElementById("loginPass").focus();
+}
+function closeLogin() {
+    document.getElementById("loginModal").classList.remove("active");
+}
+function doLogin() {
+    const pass = document.getElementById("loginPass").value;
+    if (pass === "8989") {
+        isAdmin = true;
+        closeLogin();
+        document.getElementById("loginBtn").style.display = "none";
+        document.getElementById("addGameBtn").style.display = "inline-flex";
+        document.getElementById("logoutBtn").style.display = "inline-flex";
+        showToast("Logged in successfully!");
+    } else {
+        document.getElementById("loginError").style.display = "block";
+    }
+}
+function logout() {
+    isAdmin = false;
+    document.getElementById("loginBtn").style.display = "inline-flex";
+    document.getElementById("addGameBtn").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "none";
+    showToast("Logged out");
+}
+
+// ADD GAME
+function openAddGame() {
+    document.getElementById("addGameModal").classList.add("active");
+    document.getElementById("addName").value = "";
+    document.getElementById("addUrl").value = "";
+    document.getElementById("addImage").value = "";
+    document.getElementById("addCategory").value = "";
+    document.getElementById("addName").focus();
+}
+function closeAddGame() {
+    document.getElementById("addGameModal").classList.remove("active");
+}
+function saveGame() {
+    const name = document.getElementById("addName").value.trim();
+    const url = document.getElementById("addUrl").value.trim();
+    const img = document.getElementById("addImage").value.trim();
+    const cat = document.getElementById("addCategory").value.trim() || "Other";
+    if (!name || !url) {
+        showToast("Name and URL are required");
+        return;
+    }
+    customGames.push({
+        name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        imageUrl: img || "",
+        iframeUrl: url,
+        cat, rating: 0,
+        custom: true
+    });
+    localStorage.setItem("customGames", JSON.stringify(customGames));
+    closeAddGame();
+    renderCategories();
+    filterGames();
+    showToast("Game added!");
+}
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// KEYBOARD
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+        if (document.getElementById("gameModal").classList.contains("active")) closeGame();
+        if (document.getElementById("loginModal").classList.contains("active")) closeLogin();
+        if (document.getElementById("addGameModal").classList.contains("active")) closeAddGame();
+    }
+});
+
+// ===== FAVORITES =====
+function getFavs() { return JSON.parse(localStorage.getItem("favs") || "[]"); }
+function isFavorite(slug) { return getFavs().includes(slug); }
+function toggleFavCard(slug, btn) {
+    let favs = getFavs();
+    if (favs.includes(slug)) { favs = favs.filter(s => s !== slug); btn.classList.remove("liked"); btn.innerHTML = "&#9825;"; }
+    else { favs.push(slug); btn.classList.add("liked"); btn.innerHTML = "&#9829;"; }
+    localStorage.setItem("favs", JSON.stringify(favs));
+    if (currentGameSlug === slug) updateFavBtn();
+}
+function toggleFav() {
+    if (!currentGameSlug) return;
+    let favs = getFavs();
+    if (favs.includes(currentGameSlug)) favs = favs.filter(s => s !== currentGameSlug);
+    else favs.push(currentGameSlug);
+    localStorage.setItem("favs", JSON.stringify(favs));
+    updateFavBtn();
+}
+function updateFavBtn() {
+    const btn = document.getElementById("playerFavBtn");
+    if (isFavorite(currentGameSlug)) { btn.classList.add("liked"); btn.innerHTML = "&#9829;"; }
+    else { btn.classList.remove("liked"); btn.innerHTML = "&#9825;"; }
+}
+
+// ===== SIDE PANEL =====
+function togglePanel() {
+    panelOpen = !panelOpen;
+    document.getElementById("sidePanel").classList.toggle("open", panelOpen);
+}
+
+// ===== REPORT =====
+function getReports() { return JSON.parse(localStorage.getItem("gr") || "{}"); }
+function updateReportUI() {
+    const r = getReports()[currentGameSlug] || { working: 0, broken: 0 };
+    document.getElementById("reportCount").textContent = `✓ ${r.working} working · ✗ ${r.broken} broken`;
+    const wBtn = document.getElementById("reportWorking");
+    const bBtn = document.getElementById("reportBroken");
+    const myVote = JSON.parse(localStorage.getItem("grv") || "{}")[currentGameSlug];
+    wBtn.classList.toggle("on", myVote === "working");
+    bBtn.classList.toggle("on", myVote === "broken");
+}
+function report(type) {
+    if (!currentGameSlug) return;
+    let reports = getReports();
+    if (!reports[currentGameSlug]) reports[currentGameSlug] = { working: 0, broken: 0 };
+    let votes = JSON.parse(localStorage.getItem("grv") || "{}");
+    const prev = votes[currentGameSlug];
+    if (prev === type) return;
+    if (prev) { reports[currentGameSlug][prev] = Math.max(0, reports[currentGameSlug][prev] - 1); }
+    reports[currentGameSlug][type]++;
+    votes[currentGameSlug] = type;
+    localStorage.setItem("gr", JSON.stringify(reports));
+    localStorage.setItem("grv", JSON.stringify(votes));
+    updateReportUI();
+}
+
+// ===== COMMENTS =====
+function getComments() { return JSON.parse(localStorage.getItem("gcm") || "{}"); }
+function loadComments() {
+    const list = document.getElementById("commentList");
+    const all = getComments()[currentGameSlug] || [];
+    if (all.length === 0) { list.innerHTML = '<div style="color:#444;font-size:0.78rem;">No comments yet.</div>'; return; }
+    list.innerHTML = all.map(c =>
+        `<div class="comment"><div class="c-author">${escHtml(c.name)}</div><div class="c-text">${escHtml(c.text)}</div><div class="c-time">${c.time}</div></div>`
+    ).join("");
+    list.scrollTop = list.scrollHeight;
+}
+function postComment() {
+    const inp = document.getElementById("commentInput");
+    const text = inp.value.trim();
+    if (!text || !currentGameSlug) return;
+    const name = isAdmin ? "Admin" : "Guest" + Math.floor(Math.random() * 9000 + 1000);
+    let comments = getComments();
+    if (!comments[currentGameSlug]) comments[currentGameSlug] = [];
+    const now = new Date();
+    comments[currentGameSlug].push({ name, text, time: now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+    localStorage.setItem("gcm", JSON.stringify(comments));
+    inp.value = "";
+    loadComments();
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ===== FULLSCREEN =====
+function goFullscreen() {
+    const wrap = document.getElementById("gameFrameWrap");
+    if (wrap.requestFullscreen) wrap.requestFullscreen();
+    else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+}
+
+// INIT
+renderCategories();
+filterGames();
+</script>
+</body>
+</html>
